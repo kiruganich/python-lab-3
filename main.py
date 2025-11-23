@@ -11,6 +11,56 @@ from utilities.generators import rand_int_array, nearly_sorted, many_duplicates,
 from utilities.benchmark import benchmark_sorts
 from src.costants import *
 
+def save_benchmark_report():
+    print("\n--- Сохранение отчёта с бенчмарками ---")
+    filename = "report.txt"
+    
+    try:
+        arrays = {
+            "Случайный (int)": rand_int_array(1000, 0, 1000, seed=42),
+            "Почти отсортированный": nearly_sorted(1000, 50, seed=42),
+            "Много дубликатов": many_duplicates(1000, k_unique=10, seed=42),
+            "Убывающий": reverse_sorted(1000),
+            "Случайный (float)": rand_float_array(1000, 0.0, 1.0, seed=42)
+        }
+
+        int_arrays = {k: v for k, v in arrays.items() if isinstance(v[0], int)}
+        float_arrays = {k: v for k, v in arrays.items() if isinstance(v[0], float)}
+
+        int_results = benchmark_sorts(int_arrays, {"Bubble Sort": bubble_sort, "Counting Sort": counting_sort})
+        float_results = benchmark_sorts(float_arrays, {"Bucket Sort": lambda arr: bucket_sort(arr)})
+
+        import datetime
+        report_content = f"=== Отчёт о бенчмарке сортировок ===\n"
+        report_content += f"Дата и время: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+
+        report_content += "--- Результаты для целочисленных массивов ---\n"
+        report_content += format_results_for_file(int_results)
+
+        report_content += "\n--- Результаты для вещественных массивов ---\n"
+        report_content += format_results_for_file(float_results)
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(report_content)
+        
+        print(f"Отчёт сохранён в файл: {filename}")
+    except Exception as e:
+        print(f"Ошибка при сохранении отчёта: {e}")
+
+def format_results_for_file(results: dict) -> str:
+
+    output_lines = []
+    for algo_name, timings in results.items():
+        output_lines.append(f"\n{algo_name}:")
+        for array_name, time_taken in timings.items():
+            if time_taken == float('inf'):
+                output_lines.append(f"  {array_name}: ОШИБКА ВЫПОЛНЕНИЯ")
+            else:
+                output_lines.append(f"  {array_name}: {time_taken:.6f} сек")
+    return "\n".join(output_lines)
+
+
+
 def main():
 
     parser = argparse.ArgumentParser(
@@ -22,7 +72,7 @@ def main():
     args, _ = parser.parse_known_args()
 
     if args.help:
-        with open('report.txt', 'r', encoding='utf-8') as f:
+        with open('info.txt', 'r', encoding='utf-8') as f:
             help_text = f.read()
         print(help_text)
         sys.exit(0)
@@ -39,8 +89,9 @@ def main():
             print("3. Работа со стеком")
             print("4. Демонстрация сортировок на случайных данных")
             print("5. Запустить бенчмарк")
-            print("6. Выйти")
-            choice = input("\nВыберите действие (1-6): ").strip()
+            print("6. Сохранить отчёт с бенчмарками в файл")
+            print("7. Выйти")
+            choice = input("\nВыберите действие (1-7): ").strip()
         except (EOFError, KeyboardInterrupt):
             print("\nВыход по прерыванию.")
             exit(0)
@@ -56,6 +107,8 @@ def main():
         elif choice == '5':
             run_benchmark()
         elif choice == '6':
+            save_benchmark_report()
+        elif choice == '7':
             print("До свидания!")
             break
         else:
