@@ -1,5 +1,5 @@
 import time
-from typing import Callable, Dict, List, Any
+from typing import Callable, Dict, List
 
 def timeit_once(func: Callable, *args, **kwargs) -> float:
     start_time = time.perf_counter()
